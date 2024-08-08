@@ -10,7 +10,7 @@ const client = new Client({
   port: process.env.DB_PORT || 5432, // Default PostgreSQL port is 5432
   ssl: {
     rejectUnauthorized: false, // Set to false if you want to allow self-signed certificates
-    ca: fs.readFileSync('root-certs.crt'), // Ganti dengan path ke root-certs.crt
+    ca: fs.readFileSync('crt/root-certs.crt'), // Ganti dengan path ke root-certs.crt
   },
 });
 
