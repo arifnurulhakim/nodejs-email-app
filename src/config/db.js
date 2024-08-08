@@ -1,6 +1,19 @@
 require('dotenv').config(); // Import dan konfigurasikan dotenv
 const fs = require('fs'); // Import fs module untuk membaca file
+const path = require('path'); // Import path module untuk mengelola path file
 const { Client } = require('pg'); // Import Client from pg
+
+// Tentukan path ke root-certs.crt
+const certPath = path.join(__dirname, '/crt/root-certs.crt'); // Sesuaikan path jika perlu
+
+// Membaca file sertifikat
+let ca;
+try {
+  ca = fs.readFileSync(certPath);
+} catch (error) {
+  console.error('Error reading SSL certificate file:', error.message);
+  process.exit(1); // Keluar dari aplikasi jika gagal membaca sertifikat
+}
 
 const client = new Client({
   host: process.env.DB_HOST,
@@ -9,8 +22,8 @@ const client = new Client({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 5432, // Default PostgreSQL port is 5432
   ssl: {
-    rejectUnauthorized: false, // Set to false if you want to allow self-signed certificates
-    ca: fs.readFileSync('crt/root-certs.crt'), // Ganti dengan path ke root-certs.crt
+    rejectUnauthorized: false, // Set to false jika ingin menerima sertifikat self-signed
+    ca, // Menggunakan variable ca yang berisi isi sertifikat
   },
 });
 
