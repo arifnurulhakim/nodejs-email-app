@@ -5,7 +5,10 @@ exports.up = function(knex) {
   return knex.schema.createTable(`${dbPrefix}users`, function(table) {
     table.increments('id').primary();
     table.string('username').notNullable().unique();
+    table.string('email').notNullable().unique();
     table.string('password').notNullable();
+    table.tinyint('otp').nullable(); // Add OTP as tinyint, nullable
+    table.datetime('otp_expires').nullable(); // Add otp_expires as datetime, nullable
     table.timestamps(true, true);
   });
 };

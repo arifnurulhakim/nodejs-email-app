@@ -1,0 +1,17 @@
+DB_HOST=user-prod-us-east-2-1.cluster-cfi5vnucvv3w.us-east-2.rds.amazonaws.com
+DB_PORT=5432
+DB_NAME=nodejs-email-app-main-db-02ca60617fe3bb7ba
+DB_USER=nodejs-email-app-main-db-02ca60617fe3bb7ba
+DB_PASSWORD=xhKmBvNcXYap4MkBVwTjgyuy9czvYa
+PORT=3000
+DB_PREFIX=nem_
+JWT_SECRET='c954e920cd314c9b1e344251d65b578a819a89cb0abe63e3e615e35312188c8566ea0b55dd33dee973f7c92fa4976585038c8e68d1fa0651295d05e6d059867f'
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.sendinblue.com
+MAIL_PORT=587
+MAIL_USERNAME=be.hkm.plexus@gmail.com
+MAIL_PASSWORD=m0RQ53kFNjd91ZnL
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"

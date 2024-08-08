@@ -31,9 +31,9 @@ const sendEmail = async (to, subject, text) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.getAll();
-    res.status(200).json(users);
+    res.status(200).json({ status: 'success', data: users });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users',  error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error fetching users', error: error.message });
   }
 };
 
@@ -43,12 +43,12 @@ exports.getUserById = async (req, res) => {
   try {
     const user = await User.getById(id);
     if (user) {
-      res.status(200).json(user);
+      res.status(200).json({ status: 'success', data: user });
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ status: 'error', message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching user',  error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error fetching user', error: error.message });
   }
 };
 
@@ -58,9 +58,9 @@ exports.createUser = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({ username, email, password: hashedPassword });
-    res.status(201).json({ message: 'User created successfully' });
+    res.status(201).json({ status: 'success', message: 'User created successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating user',  error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error creating user', error: error.message });
   }
 };
 
@@ -77,12 +77,12 @@ exports.updateUser = async (req, res) => {
         updatedUser.password = await bcrypt.hash(password, 10);
       }
       await User.update(id, updatedUser, updatedEmail);
-      res.status(200).json({ message: 'User updated successfully' });
+      res.status(200).json({ status: 'success', message: 'User updated successfully' });
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ status: 'error', message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error updating user',  error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error updating user', error: error.message });
   }
 };
 
@@ -93,12 +93,12 @@ exports.deleteUser = async (req, res) => {
     const user = await User.getById(id);
     if (user) {
       await User.delete(id);
-      res.status(200).json({ message: 'User deleted successfully' });
+      res.status(200).json({ status: 'success', message: 'User deleted successfully' });
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ status: 'error', message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting user',  error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error deleting user', error: error.message });
   }
 };
 
@@ -106,7 +106,7 @@ exports.deleteUser = async (req, res) => {
 exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = (await User.getByAll()).find(u => u.username === username);
+    const user = (await User.getAllusername()).find(u => u.username === username);
     if (user && await bcrypt.compare(password, user.password)) {
       const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
       res.status(200).json({
@@ -114,7 +114,7 @@ exports.login = async (req, res) => {
         message: 'login has been successful',
         data: {
           username: user.username,
-          email: user.email,
+          email: user.email ?? null,
           token,
           exp: 3600 // Expiration time in seconds (1 hour)
         }
@@ -169,13 +169,14 @@ exports.authenticateToken = (req, res, next) => {
   });
 };
 
+// Mengirimkan kode verifikasi untuk reset password
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = (await User.getByAll()).find(u => u.email === email);
  
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ status: 'error', message: 'User not found' });
     }
 
     // Generate a 6-digit verification code
@@ -188,10 +189,9 @@ exports.forgotPassword = async (req, res) => {
     // Kirim email dengan kode verifikasi
     await sendEmail(email, 'Reset Password', `Your verification code is: ${verificationCode}`);
 
-    res.status(200).json({ message: 'Verification code sent to your email' });
+    res.status(200).json({ status: 'success', message: 'Verification code sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: 'Error sending verification code', error: error.message });
-
+    res.status(500).json({ status: 'error', message: 'Error sending verification code', error: error.message });
   }
 };
 
@@ -199,22 +199,22 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   const { verificationCode, newPassword } = req.body;
   try {
- 
     const user = (await User.getByAll()).find(u => u.reset_token === verificationCode);
  
     if (!user || !user.reset_token_expires || new Date() > new Date(user.reset_token_expires)) {
-      return res.status(400).json({ message: 'Invalid or expired verification code' });
+      return res.status(400).json({ status: 'error', message: 'Invalid or expired verification code' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.update(user.id, { password: hashedPassword });
     await User.clearResetToken(user.id); // Menghapus token reset
 
-    res.status(200).json({ message: 'Password has been reset successfully' });
+    res.status(200).json({ status: 'success', message: 'Password has been reset successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error sending verification code', error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error resetting password', error: error.message });
   }
 };
+
 
 
 const sendOtpEmail = async (to, otp) => {
@@ -234,7 +234,7 @@ exports.loginWithEmail = async (req, res) => {
   try {
     const user = await User.getByEmail(email);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ status: 'error', message: 'User not found' });
     }
 
     // Generate OTP dan waktu kedaluwarsa
@@ -244,9 +244,9 @@ exports.loginWithEmail = async (req, res) => {
     await User.saveOtp(user.id, otp, otpExpires);
     await sendOtpEmail(user.email, otp);
 
-    res.status(200).json({ message: 'OTP sent to your email' });
+    res.status(200).json({ status: 'success', message: 'OTP sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: 'Error sending OTP', error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error sending OTP', error: error.message });
   }
 };
 
@@ -256,16 +256,16 @@ exports.verifyOtp = async (req, res) => {
   try {
     const user = await User.getByEmail(email);
     if (!user || !user.otp || !user.otp_expires) {
-      return res.status(404).json({ message: 'User not found or OTP not generated' });
+      return res.status(404).json({ status: 'error', message: 'User not found or OTP not generated' });
     }
 
     if (user.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
+      return res.status(400).json({ status: 'error', message: 'Invalid OTP' });
     }
 
     // Periksa apakah OTP masih berlaku
     if (new Date() > new Date(user.otp_expires)) {
-      return res.status(400).json({ message: 'OTP has expired' });
+      return res.status(400).json({ status: 'error', message: 'OTP has expired' });
     }
 
     // Hapus OTP setelah berhasil diverifikasi
@@ -287,7 +287,8 @@ exports.verifyOtp = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error verifying OTP', error: error.message });
+    res.status(500).json({ status: 'error', message: 'Error verifying OTP', error: error.message });
   }
 };
+
 

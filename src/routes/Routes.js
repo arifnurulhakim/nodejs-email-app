@@ -5,16 +5,27 @@ const UserController = require('../controllers/UserController');
 const CategoryController = require('../controllers/CategoryController');
 const ProductController = require('../controllers/ProductController');
 const BannerController = require('../controllers/BannerController');
-const EmailController = require('../controllers/EmailController'); // Tambahkan import untuk EmailController
-const userRequest = require('../requests/userRequest'); // User validators
-const categoryRequest = require('../requests/categoryRequest'); // Category validators
-const productRequest = require('../requests/productRequest'); // Product validators
-const emailRequest = require('../requests/emailRequest'); // Email validators
-const EmailTemplateController = require('../controllers/EmailTemplateController'); // Import EmailTemplateController
-const emailtemplateRequest = require('../requests/emailtemplateRequest'); // Import validator
-
+const EmailController = require('../controllers/EmailController');
+const EmailTemplateController = require('../controllers/EmailTemplateController');
+const userRequest = require('../requests/userRequest');
+const categoryRequest = require('../requests/categoryRequest');
+const productRequest = require('../requests/productRequest');
+const emailRequest = require('../requests/emailRequest');
+const emailtemplateRequest = require('../requests/emailtemplateRequest');
+const authenticateToken = require('../middleware/authMiddleware'); // Import the middleware
 
 const upload = multer({ dest: 'uploads/' }); // Set the upload directory
+
+// Public routes (no authentication required)
+router.post('/login', userRequest.validateLogin, UserController.login);
+router.post('/register', userRequest.validateUser, UserController.register);
+router.post('/forgot-password', UserController.forgotPassword);
+router.post('/reset-password', UserController.resetPassword);
+router.post('/login/email', UserController.loginWithEmail);
+router.post('/login/verif', UserController.verifyOtp);
+
+// Protected routes (authentication required)
+router.use(authenticateToken); // Apply middleware to all routes below this line
 
 // CRUD routes for Users
 router.get('/users', UserController.getAllUsers);
@@ -22,16 +33,6 @@ router.get('/users/:id', UserController.getUserById);
 router.post('/users', userRequest.validateUser, UserController.createUser);
 router.put('/users/:id', userRequest.validateUser, UserController.updateUser);
 router.delete('/users/:id', UserController.deleteUser);
-
-// Authentication routes
-router.post('/login', userRequest.validateLogin, UserController.login);
-router.post('/register', userRequest.validateUser, UserController.register);
-router.post('/forgot-password', UserController.forgotPassword);
-router.post('/reset-password', UserController.resetPassword);
-
-// New routes for email login with OTP
-router.post('/login/email', UserController.loginWithEmail);
-router.post('/login/verif', UserController.verifyOtp);
 
 // CRUD routes for Categories
 router.get('/categories', CategoryController.getAllCategories);
@@ -65,17 +66,17 @@ router.post('/emails', emailRequest.validateEmail, EmailController.createEmail);
 router.put('/emails/:id', emailRequest.validateEmail, EmailController.updateEmail);
 router.delete('/emails/:id', EmailController.deleteEmail);
 
+// Email templates routes
 router.get('/email-templates', EmailTemplateController.getAllEmailTemplates);
 router.get('/email-templates/:id', EmailTemplateController.getEmailTemplateById);
 router.post('/email-templates', emailtemplateRequest.validateEmailTemplate, EmailTemplateController.createEmailTemplate);
 router.put('/email-templates/:id', emailtemplateRequest.validateEmailTemplate, EmailTemplateController.updateEmailTemplate);
 router.delete('/email-templates/:id', EmailTemplateController.deleteEmailTemplate);
 
-router.post('/emails-send', EmailController.sendEmails); // Rute untuk mengirim email
+// Route to send emails
+router.post('/emails-send', EmailController.sendEmails); // Route to send emails
 
-// Route untuk mengambil semua email yang terkirim
-router.get('/emails-sent', EmailController.getAllSentEmails); // Rute untuk mendapatkan email yang sudah terkirim
-
-
+// Route to get all sent emails
+router.get('/emails-sent', EmailController.getAllSentEmails); // Route to get sent emails
 
 module.exports = router;
